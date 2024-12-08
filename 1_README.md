@@ -5,7 +5,7 @@ elasticSearch 구동하기 위한 가장 기본 적인 방법
 
 
 > *ElasticSearch Install*
->> wget https://www.elastic.co/kr/downloads/elasticsearch
+>> wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-8.16.1-darwin-aarch64.tar.gz
 
 
 >*Kibana Install*
@@ -113,7 +113,7 @@ ElasticSearch는 접근해야 하는 파일이 굉장히 많고, 그로인해서
 > 
 > 예시는 다음과 같아.
 > 
-> > node.name: "node-1"
+> > node.name: "node-test-one"
 > >
 > > discover.seed_hosts: ["test-1"]
 > >
