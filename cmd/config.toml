@@ -1,0 +1,11 @@
+[docker]
+init = false
+targets = ["es01", "kibana"]
+
+[server]
+logPath = "./log/elasticSearch.log"
+
+[repository.elasticSearch]
+URI = ""
+User = ""
+Password = ""

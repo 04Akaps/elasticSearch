@@ -3,12 +3,13 @@ package docker
 import (
 	"bytes"
 	"fmt"
+	"github.com/04Akaps/elasticSearch.git/config"
 	"os"
 	"os/exec"
 	"strings"
 )
 
-func Initialize() {
+func Initialize(cfg config.Config) {
 
 	err := os.Chdir("../docker")
 
@@ -16,10 +17,12 @@ func Initialize() {
 		panic(err)
 	}
 
-	removeImage()
+	if cfg.Docker.Init {
+		removeImage(cfg)
+	}
 }
 
-func removeImage() {
+func removeImage(cfg config.Config) {
 	cmd := exec.Command("docker", "ps", "--format", "{{.Names}}")
 	var out bytes.Buffer
 	cmd.Stdout = &out
@@ -32,7 +35,7 @@ func removeImage() {
 	}
 
 	containerNames := strings.Split(out.String(), "\n")
-	targets := []string{"es01", "kibana"}
+	targets := cfg.Docker.Targets
 
 	for _, name := range containerNames {
 		name = strings.TrimSpace(name)
