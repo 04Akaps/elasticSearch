@@ -22,6 +22,20 @@ type Config struct {
 			Password string
 		}
 	}
+
+	Cache struct {
+		Redis struct {
+			DataSource string
+			DB         int
+			Password   string
+			UserName   string
+			Beta       float64
+		}
+
+		Local struct {
+			LocalCacheTTL int64
+		}
+	}
 }
 
 func NewConfig(path string) Config {
