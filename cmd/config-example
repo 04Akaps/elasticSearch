@@ -1,0 +1,21 @@
+[docker]
+init = false
+targets = ["es01", "kibana"]
+
+[server]
+port = ":8080"
+
+[repository.elasticSearch]
+URI = ""
+User = ""
+Password = ""
+
+[cache.redis]
+dataSource = ""
+db = ""
+password = ''
+userName = ""
+beta = 0.5
+
+[cache.local]
+localCacheTTL = 30
