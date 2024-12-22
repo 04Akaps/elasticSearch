@@ -6,7 +6,7 @@ targets = ["es01", "kibana"]
 port = ":8080"
 
 [repository.elasticSearch]
-URI = ""
+URI = "localhost:9200"
 User = ""
 Password = ""
 

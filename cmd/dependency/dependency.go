@@ -38,7 +38,7 @@ var ElasticSearch = fx.Module(
 
 var Service = fx.Module(
 	"service",
-	fx.Provide(func(cfg config.Config, cacheManager cache.CacheManager) service.Manager {
-		return service.NewManager(cfg, cacheManager)
+	fx.Provide(func(cfg config.Config, cacheManager cache.CacheManager, search elasticSearch.ElasticSearch) service.Manager {
+		return service.NewManager(cfg, cacheManager, search)
 	}),
 )

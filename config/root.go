@@ -5,6 +5,15 @@ import (
 	"os"
 )
 
+type Twitter struct {
+	Counter           int
+	ConsumerKey       string
+	ConsumerSecret    string
+	AccessToken       string
+	AccessTokenSecret string
+	BearerToken       string
+}
+
 type Config struct {
 	Docker struct {
 		Init    bool
@@ -36,6 +45,8 @@ type Config struct {
 			LocalCacheTTL int64
 		}
 	}
+
+	Twitter map[string]Twitter // key is search keyword
 }
 
 func NewConfig(path string) Config {

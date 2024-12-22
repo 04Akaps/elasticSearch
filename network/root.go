@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/04Akaps/elasticSearch.git/config"
+	"github.com/04Akaps/elasticSearch.git/docker"
+	insert "github.com/04Akaps/elasticSearch.git/network/Insert"
 	"github.com/04Akaps/elasticSearch.git/network/read"
 	"github.com/04Akaps/elasticSearch.git/service"
 	"github.com/gofiber/fiber/v2"
@@ -70,6 +72,7 @@ func NewRouter(
 
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
+			docker.Initialize(config)
 			go func() {
 				log.Println("server start", "endpoint", r.port)
 				if err := r.engine.Listen(r.port); err != nil {
@@ -85,6 +88,7 @@ func NewRouter(
 	})
 
 	read.RegisterReadRouter(r.group("/api/read"), manager)
+	insert.RegisterInsertRouter(r.group("/api/insert"), manager)
 
 	return r
 }

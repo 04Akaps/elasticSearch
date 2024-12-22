@@ -3,17 +3,28 @@ package service
 import (
 	"github.com/04Akaps/elasticSearch.git/cache"
 	"github.com/04Akaps/elasticSearch.git/config"
+	"github.com/04Akaps/elasticSearch.git/repository/elasticSearch"
+	"github.com/04Akaps/elasticSearch.git/service/loop"
 	v1 "github.com/04Akaps/elasticSearch.git/service/v1"
 )
 
 type Manager struct {
+	cfg config.Config
+
 	v1 v1.V1
 }
 
-func NewManager(cfg config.Config, cache cache.CacheManager) Manager {
+func NewManager(
+	cfg config.Config,
+	cache cache.CacheManager,
+	elasticSearch elasticSearch.ElasticSearch,
+) Manager {
 	m := Manager{
-		v1: v1.NewV1(cfg, cache),
+		cfg: cfg,
+		v1:  v1.NewV1(cfg, cache, elasticSearch),
 	}
+
+	loop.RunTwitterLoop(cfg, elasticSearch, cache)
 
 	return m
 }
