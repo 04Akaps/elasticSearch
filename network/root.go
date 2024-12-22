@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/04Akaps/elasticSearch.git/config"
 	"github.com/04Akaps/elasticSearch.git/network/read"
+	"github.com/04Akaps/elasticSearch.git/service"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -34,6 +35,7 @@ var AllowHeaders = []string{
 func NewRouter(
 	lc fx.Lifecycle,
 	config config.Config,
+	manager service.Manager,
 ) Router {
 	r := Router{
 		port: fmt.Sprintf(":%s", config.Server.Port),
@@ -82,7 +84,7 @@ func NewRouter(
 		},
 	})
 
-	read.RegisterReadRouter(r.group("/api/read"))
+	read.RegisterReadRouter(r.group("/api/read"), manager)
 
 	return r
 }
