@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/04Akaps/elasticSearch.git/config"
+	"github.com/04Akaps/elasticSearch.git/network/read"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -80,6 +81,8 @@ func NewRouter(
 			return r.engine.Shutdown()
 		},
 	})
+
+	read.RegisterReadRouter(r.group("/api/read"))
 
 	return r
 }

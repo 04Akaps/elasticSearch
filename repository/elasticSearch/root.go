@@ -3,6 +3,7 @@ package elasticSearch
 import (
 	"github.com/04Akaps/elasticSearch.git/config"
 	"github.com/olivere/elastic/v7"
+	"log"
 )
 
 type ElasticSearch struct {
@@ -11,6 +12,8 @@ type ElasticSearch struct {
 }
 
 func NewElasticSearch(cfg config.Config) ElasticSearch {
+	log.Println("Start to connect elasticSearch")
+
 	config := cfg.Repository.ElasticSearch
 
 	client, err := elastic.NewClient(
@@ -20,7 +23,7 @@ func NewElasticSearch(cfg config.Config) ElasticSearch {
 	)
 
 	if err != nil {
-
+		log.Panic("Failed to connect elasticSearch", "err", err)
 	}
 
 	return ElasticSearch{cfg: cfg, client: client}
