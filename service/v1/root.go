@@ -8,13 +8,13 @@ import (
 
 type V1 struct {
 	cfg           config.Config
-	cache         cache.CacheManager
+	cache         *cache.CacheManager
 	elasticSearch elasticSearch.ElasticSearch
 }
 
 func NewV1(
 	cfg config.Config,
-	cache cache.CacheManager,
+	cache *cache.CacheManager,
 	elasticSearch elasticSearch.ElasticSearch,
 ) V1 {
 	return V1{cfg, cache, elasticSearch}

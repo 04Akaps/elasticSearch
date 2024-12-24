@@ -7,7 +7,6 @@ import (
 )
 
 func main() {
-
 	fx.New(
 		dependency.Cfg,
 		dependency.CacheManager,

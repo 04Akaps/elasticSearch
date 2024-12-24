@@ -14,8 +14,8 @@ type v1 struct {
 func RegisterV1Router(r fiber.Router, service v1Service.V1) {
 	v := v1{service}
 
-	r.Get("/insert-test", v.insertTest)
-
+	r.Post("/insert-test", v.insertTest)
+	r.Post("/insert-mapper", v.insertMapper)
 }
 
 func (v v1) insertTest(c *fiber.Ctx) error {
@@ -29,5 +29,10 @@ func (v v1) insertTest(c *fiber.Ctx) error {
 
 	v.service.InsertTest(req)
 
+	return nil
+}
+
+func (v v1) insertMapper(c *fiber.Ctx) error {
+	v.service.InsertMapperTest()
 	return nil
 }
