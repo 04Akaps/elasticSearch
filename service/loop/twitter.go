@@ -22,13 +22,13 @@ func RunTwitterLoop(
 	elasticSearch elasticSearch.ElasticSearch,
 	cacheManager cache.CacheManager,
 ) {
-	l := TweetsLoop{cfg, elasticSearch, cacheManager}
+	//l := TweetsLoop{cfg, elasticSearch, cacheManager}
 
-	for key, info := range l.cfg.Twitter {
-		twitterClient := twitter.NewTwitterClient(info)
-
-		go l.runTwitterClient(twitterClient, key, info)
-	}
+	//for key, info := range l.cfg.Twitter {
+	//	twitterClient := twitter.NewTwitterClient(info)
+	//
+	//	//go l.runTwitterClient(twitterClient, key, info)
+	//}
 }
 
 func (t TweetsLoop) runTwitterClient(client twitter.Twitter, key string, info config.Twitter) {

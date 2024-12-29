@@ -29,6 +29,7 @@ type Config struct {
 			URI      string
 			User     string
 			Password string
+			ApiKey   string
 		}
 	}
 

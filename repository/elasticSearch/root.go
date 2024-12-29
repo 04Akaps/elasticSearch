@@ -6,6 +6,7 @@ import (
 	"github.com/04Akaps/elasticSearch.git/config"
 	"github.com/olivere/elastic/v7"
 	"log"
+	"net/http"
 )
 
 type ElasticSearch struct {
@@ -13,16 +14,43 @@ type ElasticSearch struct {
 	client *elastic.Client
 }
 
+type APIKeyTransport struct {
+	APIKey    string
+	Transport http.RoundTripper
+}
+
+func (t *APIKeyTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	// Add the Authorization header with the API Key
+	req.Header.Set("Authorization", "ApiKey "+t.APIKey)
+
+	// Continue the HTTP request using the provided Transport
+	return t.Transport.RoundTrip(req)
+}
+
 func NewElasticSearch(cfg config.Config) ElasticSearch {
 	log.Println("Start to connect elasticSearch")
 
 	config := cfg.Repository.ElasticSearch
 
-	client, err := elastic.NewClient(
-		elastic.SetBasicAuth(config.User, config.Password),
-		elastic.SetURL(config.URI),
-		elastic.SetSniff(false),
-	)
+	var connectorConfig []elastic.ClientOptionFunc
+	connectorConfig = append(connectorConfig, elastic.SetURL(config.URI))
+	connectorConfig = append(connectorConfig, elastic.SetSniff(false))
+
+	if config.ApiKey != "" {
+		// connet using api Key
+		// -> Elastic Enterprise를 사용하면 Api Key를 통해서 접속을 해야 한다.
+		connectorConfig = append(connectorConfig, elastic.SetHttpClient(&http.Client{
+			Transport: &APIKeyTransport{
+				APIKey:    config.ApiKey,
+				Transport: http.DefaultTransport,
+			},
+		}))
+	} else {
+		// connect using user info
+		connectorConfig = append(connectorConfig, elastic.SetBasicAuth(config.User, config.Password))
+	}
+
+	client, err := elastic.NewClient(connectorConfig...)
 
 	if err != nil {
 		log.Panic("Failed to connect elasticSearch", "err", err)

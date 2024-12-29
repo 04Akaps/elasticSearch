@@ -6,9 +6,12 @@ targets = ["es01", "kibana"]
 port = ":8080"
 
 [repository.elasticSearch]
+# -> ApiKey가 존재하면, ApiKey를 통한 연결
+# -> 없다면, User, Password를 활용
 URI = "localhost:9200"
 User = ""
 Password = ""
+ApiKey = ""
 
 [cache.redis]
 dataSource = ""
