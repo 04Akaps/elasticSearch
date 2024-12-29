@@ -72,6 +72,23 @@ func (e ElasticSearch) Bulk() *elastic.BulkService {
 	return e.client.Bulk()
 }
 
+func (e ElasticSearch) Indexes() (map[string]bool, error) {
+	indices, err := e.client.CatIndices().Do(context.Background())
+
+	if err != nil {
+		return nil, err
+	}
+
+	res := make(map[string]bool, len(indices))
+
+	for _, index := range indices {
+		res[index.Index] = true
+	}
+
+	return res, nil
+
+}
+
 func (e ElasticSearch) InsertBulkTest(index string, v []_twitter.SearchResult) {
 	bulkRequest := e.client.Bulk()
 
