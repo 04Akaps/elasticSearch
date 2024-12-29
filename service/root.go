@@ -16,7 +16,7 @@ type Manager struct {
 
 func NewManager(
 	cfg config.Config,
-	cache cache.CacheManager,
+	cache *cache.CacheManager,
 	elasticSearch elasticSearch.ElasticSearch,
 ) Manager {
 	m := Manager{

@@ -24,7 +24,7 @@ var Cfg = fx.Module(
 
 var CacheManager = fx.Module(
 	"cacheManager",
-	fx.Provide(func(cfg config.Config) cache.CacheManager {
+	fx.Provide(func(cfg config.Config) *cache.CacheManager {
 		return cache.NewCacheManager(cfg)
 	}),
 )
@@ -38,7 +38,7 @@ var ElasticSearch = fx.Module(
 
 var Service = fx.Module(
 	"service",
-	fx.Provide(func(cfg config.Config, cacheManager cache.CacheManager, search elasticSearch.ElasticSearch) service.Manager {
+	fx.Provide(func(cfg config.Config, cacheManager *cache.CacheManager, search elasticSearch.ElasticSearch) service.Manager {
 		return service.NewManager(cfg, cacheManager, search)
 	}),
 )

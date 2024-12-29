@@ -6,7 +6,7 @@ import (
 )
 
 type Twitter struct {
-	Counter           int
+	Ticker            int64
 	ConsumerKey       string
 	ConsumerSecret    string
 	AccessToken       string

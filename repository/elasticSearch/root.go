@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/04Akaps/elasticSearch.git/config"
+	_twitter "github.com/04Akaps/elasticSearch.git/types/twitter"
 	"github.com/olivere/elastic/v7"
 	"log"
 	"net/http"
@@ -65,6 +66,35 @@ func NewElasticSearch(cfg config.Config) ElasticSearch {
 	log.Println("Success to connect elasticSearch")
 
 	return ElasticSearch{cfg: cfg, client: client}
+}
+
+func (e ElasticSearch) Bulk() *elastic.BulkService {
+	return e.client.Bulk()
+}
+
+func (e ElasticSearch) InsertBulkTest(index string, v []_twitter.SearchResult) {
+	bulkRequest := e.client.Bulk()
+
+	for i, doc := range v {
+		req := elastic.NewBulkIndexRequest().
+			Index(index).
+			Id(string(rune(i + 1))).
+			Doc(doc)
+		bulkRequest = bulkRequest.Add(req)
+	}
+
+	ctx := context.Background()
+	bulkResponse, err := bulkRequest.Do(ctx)
+	if err != nil {
+		log.Fatalf("Failed to execute bulk request: %s", err)
+	}
+
+	// 응답 처리
+	if bulkResponse.Errors {
+		log.Println("Bulk request completed with errors")
+	} else {
+		log.Println("Bulk request succeeded")
+	}
 }
 
 // just query test
