@@ -12,6 +12,8 @@ type Twitter struct {
 	AccessToken       string
 	AccessTokenSecret string
 	BearerToken       string
+
+	StartTime int64
 }
 
 type Config struct {

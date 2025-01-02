@@ -43,19 +43,20 @@ func (t Twitter) SearchTweets(
 	key string,
 	opts twitter.TweetRecentSearchOptions,
 	field twitter.TweetFieldOptions,
-) ([]*elastic.BulkIndexRequest, error) {
+) (res []*elastic.BulkIndexRequest, lastTweetsUnix int64, err error) {
 
 	searchResult, err := t.client.RecentSearch(ctx, key, opts, field)
 
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	var res []*elastic.BulkIndexRequest
 	index := 0
 
 	for _, l := range searchResult.LookUps {
 		info := l.Tweet
+
+		unixTime := convertToUnix(info.CreatedAt)
 
 		doc := _twitter.SearchResult{
 			Text:     normalizeSpaces(info.Text),
@@ -65,9 +66,17 @@ func (t Twitter) SearchTweets(
 				PlaceID:     info.Geo.PlaceID,
 				Coordinates: info.Geo.Coordinates.Coordinates,
 			},
-			ID:        info.ID,
+			PostID:    info.ID,
 			Source:    info.Source,
-			CreatedAt: convertToUnix(info.CreatedAt),
+			CreatedAt: unixTime,
+			UserInfo: _twitter.User{
+				UserName: l.User.UserName,
+				UserID:   l.User.ID,
+			},
+			Location: _twitter.Location{
+				CountryCode: l.Place.CountryCode,
+				FullName:    l.Place.FullName,
+			},
 		}
 
 		req := elastic.NewBulkIndexRequest().
@@ -75,12 +84,16 @@ func (t Twitter) SearchTweets(
 			Id(string(rune(index + 1))).
 			Doc(doc)
 
+		if unixTime > lastTweetsUnix {
+			lastTweetsUnix = unixTime
+		}
+
 		res = append(res, req)
 
 		index++
 	}
 
-	return res, nil
+	return res, lastTweetsUnix, nil
 }
 
 func normalizeSpaces(input string) string {

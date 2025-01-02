@@ -2,14 +2,14 @@ package loop
 
 import (
 	"context"
+	"github.com/04Akaps/elasticSearch.git/common/twitter"
 	"log"
 	"time"
 
 	"github.com/04Akaps/elasticSearch.git/cache"
 	"github.com/04Akaps/elasticSearch.git/config"
 	"github.com/04Akaps/elasticSearch.git/repository/elasticSearch"
-	"github.com/04Akaps/elasticSearch.git/twitter"
-	twitterDependency "github.com/g8rswimmer/go-twitter"
+	. "github.com/g8rswimmer/go-twitter"
 )
 
 type TweetsLoop struct {
@@ -23,30 +23,43 @@ func RunTwitterLoop(
 	elasticSearch elasticSearch.ElasticSearch,
 	cacheManager *cache.CacheManager,
 ) {
-	// l := TweetsLoop{cfg, elasticSearch, cacheManager}
+	l := TweetsLoop{cfg, elasticSearch, cacheManager}
 
-	//for key, info := range l.cfg.Twitter {
-	//	twitterClient := twitter.NewTwitterClient(info)
-	//
-	//	//go l.runTwitterClient(twitterClient, key, info)
-	//}
+	for key, info := range l.cfg.Twitter {
+		twitterClient := twitter.NewTwitterClient(info)
+
+		go l.runTwitterClient(twitterClient, key, info)
+	}
 }
 
 func (t *TweetsLoop) runTwitterClient(client twitter.Twitter, key string, info config.Twitter) {
-	opts := twitterDependency.TweetRecentSearchOptions{
-		// StartTime:  time.Now().Sub(time.Hour * 1),
-		// EndTime:
+	startTime := info.StartTime
+
+	if startTime == 0 {
+		// if zero start current Time
+		startTime = time.Now().Unix()
+	}
+
+	opts := TweetRecentSearchOptions{
+		StartTime: time.Unix(startTime, 0),
 		MaxResult: 10,
 	}
 
 	ticker := time.NewTicker(time.Duration(info.Ticker) * time.Minute)
 	defer ticker.Stop()
 
-	fieldOpts := twitterDependency.TweetFieldOptions{
-		TweetFields: []twitterDependency.TweetField{
-			twitterDependency.TweetFieldCreatedAt, twitterDependency.TweetFieldLanguage,
-			twitterDependency.TweetFieldAuthorID, twitterDependency.TweetFieldText, twitterDependency.TweetFieldGeo,
-			twitterDependency.TweetFieldID, twitterDependency.TweetFieldSource,
+	fieldOpts := TweetFieldOptions{
+		TweetFields: []TweetField{
+			TweetFieldCreatedAt, TweetFieldLanguage,
+			TweetFieldAuthorID, TweetFieldText, TweetFieldGeo,
+			TweetFieldID, TweetFieldSource,
+		},
+		UserFields: []UserField{
+			UserFieldID, UserFieldUserName, UserFieldName,
+		},
+
+		PlaceFields: []PlaceField{
+			PlaceFieldCountryCode, PlaceFieldFullName,
 		},
 	}
 
@@ -55,7 +68,7 @@ func (t *TweetsLoop) runTwitterClient(client twitter.Twitter, key string, info c
 
 		bulkClient := t.ElasticSearch.Bulk()
 
-		result, err := client.SearchTweets(ctx, key, opts, fieldOpts)
+		result, lastTweetsTime, err := client.SearchTweets(ctx, key, opts, fieldOpts)
 
 		if err != nil {
 			log.Println("Failed to get tweets", "err", err)
@@ -75,6 +88,7 @@ func (t *TweetsLoop) runTwitterClient(client twitter.Twitter, key string, info c
 				log.Println("Bulk request succeeded", "key", key)
 			}
 
+			opts.StartTime = time.Unix(lastTweetsTime, 0)
 		}
 
 		<-ticker.C
