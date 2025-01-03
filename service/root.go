@@ -24,7 +24,7 @@ func NewManager(
 		v1:  v1.NewV1(cfg, cache, elasticSearch),
 	}
 
-	loop.RunTwitterLoop(cfg, elasticSearch, cache)
+	loop.RunTwitterLoop(cfg, elasticSearch)
 	loop.RunValidatorLoop(cfg, elasticSearch)
 
 	return m

@@ -6,7 +6,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/04Akaps/elasticSearch.git/cache"
 	"github.com/04Akaps/elasticSearch.git/config"
 	"github.com/04Akaps/elasticSearch.git/repository/elasticSearch"
 	. "github.com/g8rswimmer/go-twitter"
@@ -15,15 +14,13 @@ import (
 type TweetsLoop struct {
 	cfg           config.Config
 	ElasticSearch elasticSearch.ElasticSearch
-	CacheManager  *cache.CacheManager
 }
 
 func RunTwitterLoop(
 	cfg config.Config,
 	elasticSearch elasticSearch.ElasticSearch,
-	cacheManager *cache.CacheManager,
 ) {
-	l := TweetsLoop{cfg, elasticSearch, cacheManager}
+	l := TweetsLoop{cfg, elasticSearch}
 
 	for key, info := range l.cfg.Twitter {
 		twitterClient := twitter.NewTwitterClient(info)
