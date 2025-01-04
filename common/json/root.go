@@ -24,7 +24,7 @@ func (h handler) Marshal(v interface{}) ([]byte, error) {
 	bytes, err := h.marshal(v)
 
 	if err != nil {
-		log.Errorf("Failed to marshal value", "type", reflect.TypeOf(v).String(), "err", err)
+		log.Errorf("Failed to marshal value", "type", reflect.TypeOf(v).String(), "cerr", err)
 		return nil, err
 	}
 
@@ -35,7 +35,7 @@ func (h handler) Unmarshal(buffer []byte, v interface{}) error {
 	err := h.unmarshal(buffer, v)
 
 	if err != nil {
-		log.Errorf("Failed to unmarshal value", "buffer", string(buffer), "type", reflect.TypeOf(v).String(), "err", err)
+		log.Errorf("Failed to unmarshal value", "buffer", string(buffer), "type", reflect.TypeOf(v).String(), "cerr", err)
 		return err
 	}
 

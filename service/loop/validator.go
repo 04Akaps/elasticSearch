@@ -41,7 +41,7 @@ func (v ValidatorLoop) indexValidation() {
 	res, err := v.ElasticSearch.Indexes()
 
 	if err != nil {
-		log.Println("Failed to get indexes", "err", err)
+		log.Println("Failed to get indexes", "cerr", err)
 		return
 	}
 

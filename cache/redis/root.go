@@ -39,7 +39,7 @@ func NewRedis(cfg config.Config) Redis {
 	_, err := client.Ping().Result()
 
 	if err != nil {
-		log.Panic("Failed to connect to redis client", "err", err)
+		log.Panic("Failed to connect to redis client", "cerr", err)
 	}
 
 	r := Redis{

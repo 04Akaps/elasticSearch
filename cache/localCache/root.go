@@ -22,7 +22,7 @@ func NewLocalCache(ttl time.Duration) LocalCache {
 	cache, err := bigcache.New(context.Background(), bigcache.DefaultConfig(ttl))
 
 	if err != nil {
-		log.Panic("Failed to connect cache", "err", err)
+		log.Panic("Failed to connect cache", "cerr", err)
 	}
 
 	log.Println("Success to connect local cache")

@@ -2,9 +2,10 @@ package elasticSearch
 
 import (
 	"context"
-	"fmt"
+	"github.com/04Akaps/elasticSearch.git/common/json"
 	"github.com/04Akaps/elasticSearch.git/config"
-	_twitter "github.com/04Akaps/elasticSearch.git/types/twitter"
+	"github.com/04Akaps/elasticSearch.git/types/cerr"
+	"github.com/04Akaps/elasticSearch.git/types/nlp"
 	"github.com/olivere/elastic/v7"
 	"log"
 	"net/http"
@@ -54,13 +55,13 @@ func NewElasticSearch(cfg config.Config) ElasticSearch {
 	client, err := elastic.NewClient(connectorConfig...)
 
 	if err != nil {
-		log.Panic("Failed to connect elasticSearch", "err", err)
+		log.Panic("Failed to connect elasticSearch", "cerr", err)
 	}
 
 	_, _, err = client.Ping(config.URI).Do(context.Background())
 
 	if err != nil {
-		log.Panic("Failed to ping to elasticSearch node", "err", err)
+		log.Panic("Failed to ping to elasticSearch node", "cerr", err)
 	}
 
 	log.Println("Success to connect elasticSearch")
@@ -70,6 +71,10 @@ func NewElasticSearch(cfg config.Config) ElasticSearch {
 
 func (e ElasticSearch) Bulk() *elastic.BulkService {
 	return e.client.Bulk()
+}
+
+func (e ElasticSearch) Client() *elastic.Client {
+	return e.client
 }
 
 func (e ElasticSearch) Indexes() (map[string]bool, error) {
@@ -89,68 +94,64 @@ func (e ElasticSearch) Indexes() (map[string]bool, error) {
 
 }
 
-func (e ElasticSearch) InsertBulkTest(index string, v []_twitter.SearchResult) {
-	bulkRequest := e.client.Bulk()
-
-	for i, doc := range v {
-		req := elastic.NewBulkIndexRequest().
-			Index(index).
-			Id(string(rune(i + 1))).
-			Doc(doc)
-		bulkRequest = bulkRequest.Add(req)
-	}
-
+func FindLatestNlpDoc[T nlp.NlpDoc](
+	client *elastic.Client,
+	index string,
+	buffer T,
+) error {
 	ctx := context.Background()
-	bulkResponse, err := bulkRequest.Do(ctx)
+
+	result, err := client.Search(index).
+		Sort("createdAt", false). // 내림차순
+		Size(1).Do(ctx)           // 1개만 조회
+
 	if err != nil {
-		log.Fatalf("Failed to execute bulk request: %s", err)
+		return err
 	}
 
-	// 응답 처리
-	if bulkResponse.Errors {
-		log.Println("Bulk request completed with errors")
-	} else {
-		log.Println("Bulk request succeeded")
+	if result.Hits.TotalHits.Value == 0 {
+		return cerr.NoDoc
 	}
+
+	err = json.JsonHandler.Unmarshal(result.Hits.Hits[0].Source, &buffer)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
-// just query test
-func (e ElasticSearch) InsertTest(index string, v interface{}) {
-
+func FindByKey[T any](
+	client *elastic.Client,
+	index string,
+	offset, limit int,
+	buffer []T, // 제네릭 타입 배열로 받기
+) error {
 	ctx := context.Background()
 
-	_, err := e.client.
-		Index().Index(index).
-		BodyJson(v).Do(ctx)
+	// Elasticsearch 검색 요청
+	result, err := client.Search(index).
+		From(offset). // offset(시작 위치)
+		Size(limit).  // limit(가져올 문서의 개수)
+		Do(ctx)       // 실제 실행
 
 	if err != nil {
-		log.Println("Failed to insert dummy data", "err", err)
-		return
-	}
-}
-
-// just query test
-func (e ElasticSearch) ReadTest(index, key, value string) {
-	query := elastic.NewMatchQuery(key, value)
-	ctx := context.Background()
-
-	result, err := e.client.Search(index).Query(query).Do(ctx)
-
-	if err != nil {
-		log.Println("Failed get data", "err", err)
-		return
+		return err
 	}
 
+	// 결과에서 각 히트를 처리하고, buffer에 추가
 	for _, hit := range result.Hits.Hits {
-		var testRes []byte
+		var item T
 
-		err = hit.Source.UnmarshalJSON(testRes)
+		err = json.JsonHandler.Unmarshal(hit.Source, &item)
 
 		if err != nil {
-			log.Println("Failed to unMarshal data", "err", err)
-			continue
+			return err
 		}
 
-		fmt.Println(string(testRes))
+		buffer = append(buffer, item)
 	}
+
+	return nil
 }

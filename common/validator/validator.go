@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	_validationError = "validation error: %s"
+	_validationError = "validation cerr: %s"
 )
 
 type RequestValidator struct {
@@ -45,7 +45,7 @@ func (r *RequestValidator) Validate(data interface{}) []ErrValidation {
 
 func QueryParser(req interface{}, c *fiber.Ctx) error {
 	if err := c.QueryParser(req); err != nil {
-		// TODO Log, custom err
+		// TODO Log, custom cerr
 		return err
 	}
 
@@ -62,7 +62,7 @@ func QueryParser(req interface{}, c *fiber.Ctx) error {
 
 func BodyParser(req interface{}, c *fiber.Ctx) error {
 	if err := c.BodyParser(req); err != nil {
-		// TODO Log, custom err
+		// TODO Log, custom cerr
 		return nil
 	}
 

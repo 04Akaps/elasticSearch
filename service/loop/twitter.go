@@ -68,7 +68,7 @@ func (t *TweetsLoop) runTwitterClient(client twitter.Twitter, key string, info c
 		result, lastTweetsTime, err := client.SearchTweets(ctx, key, opts, fieldOpts)
 
 		if err != nil {
-			log.Println("Failed to get tweets", "err", err)
+			log.Println("Failed to get tweets", "cerr", err)
 		} else {
 
 			for _, doc := range result {
@@ -78,7 +78,7 @@ func (t *TweetsLoop) runTwitterClient(client twitter.Twitter, key string, info c
 			response, err := bulkClient.Do(ctx)
 
 			if err != nil {
-				log.Println("Failed to send bulk write to elasticSearch", "key", key, "err", err)
+				log.Println("Failed to send bulk write to elasticSearch", "key", key, "cerr", err)
 			} else if response.Errors {
 				log.Println("Bulk request completed with errors", "key", key)
 			} else {

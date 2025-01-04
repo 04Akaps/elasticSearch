@@ -35,8 +35,8 @@ func FetchWithSingleFlight[T any](
 	}
 
 	if !errors.Is(err, redis.Nil) {
-		log.Println("Failed to get data from redis", "err", err)
-		// TODO err 커스터마이징
+		log.Println("Failed to get data from redis", "cerr", err)
+		// TODO cerr 커스터마이징
 		return res, remainTTL, cacheStored, err
 	}
 
@@ -48,7 +48,7 @@ func FetchWithSingleFlight[T any](
 		}
 
 		if setErr := manager.SetNX(key, &res, stdTTL); setErr != nil {
-			log.Println("Failed to set cache data in flight", "err", err)
+			log.Println("Failed to set cache data in flight", "cerr", err)
 		} else {
 			cacheStored = true
 		}

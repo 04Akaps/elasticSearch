@@ -46,8 +46,17 @@ Cache Hit을 주기적으로 유도하기 위해 사용이 되었고, Cache stam
         "placeID" : "",
         "coordinates" : [],
     },
-    "id" : "",
-    "source" : ""
+    "postID" : "",
+    "source" : "",
+    "userInfo" : {
+        "userName" : "",
+        "userID" : ""
+    },
+    "location" : {
+        "countryCode" : "",
+        "fullName" : ""
+    }
+    
 }
 ```
 

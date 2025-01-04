@@ -53,7 +53,7 @@ func NewRouter(
 			},
 		}),
 		logger.New(logger.Config{
-			Format:     "[FIBER] ${time} | ${status} | ${latency} | ${ip} | ${method} | ${error} | ${stack} | \"${path}\"\n",
+			Format:     "[FIBER] ${time} | ${status} | ${latency} | ${ip} | ${method} | ${cerr} | ${stack} | \"${path}\"\n",
 			TimeFormat: "2006/01/02 - 15:04:05",
 			TimeZone:   "Local",
 		}),
@@ -76,13 +76,13 @@ func NewRouter(
 			go func() {
 				log.Println("server start", "endpoint", r.port)
 				if err := r.engine.Listen(r.port); err != nil {
-					log.Println("Error Starting Server", "err", err)
+					log.Println("Error Starting Server", "cerr", err)
 				}
 			}()
 			return nil
 		},
 		OnStop: func(ctx context.Context) error {
-			log.Println("Server Shutdown", "err", ctx.Err())
+			log.Println("Server Shutdown", "cerr", ctx.Err())
 			return r.engine.Shutdown()
 		},
 	})

@@ -26,6 +26,7 @@ func NewManager(
 
 	loop.RunTwitterLoop(cfg, elasticSearch)
 	loop.RunValidatorLoop(cfg, elasticSearch)
+	loop.RunNlpLoop(cfg, elasticSearch)
 
 	return m
 }
