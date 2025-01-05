@@ -5,10 +5,11 @@ import (
 	"github.com/04Akaps/elasticSearch.git/common/json"
 	"github.com/04Akaps/elasticSearch.git/config"
 	"github.com/04Akaps/elasticSearch.git/types/cerr"
-	"github.com/04Akaps/elasticSearch.git/types/nlp"
+	"github.com/04Akaps/elasticSearch.git/types/twitter"
 	"github.com/olivere/elastic/v7"
 	"log"
 	"net/http"
+	"strings"
 )
 
 type ElasticSearch struct {
@@ -94,64 +95,44 @@ func (e ElasticSearch) Indexes() (map[string]bool, error) {
 
 }
 
-func FindLatestNlpDoc[T nlp.NlpDoc](
-	client *elastic.Client,
+func (e ElasticSearch) FindTweetsText(
 	index string,
-	buffer T,
-) error {
+	offset, limit int,
+	startTime int64,
+) (string, int64, error) {
 	ctx := context.Background()
 
-	result, err := client.Search(index).
-		Sort("createdAt", false). // 내림차순
-		Size(1).Do(ctx)           // 1개만 조회
+	query := elastic.NewBoolQuery().
+		Must(elastic.NewRangeQuery("createdAt").Gt(startTime))
+
+	result, err := e.client.Search(index).
+		Query(query).
+		Sort("createdAt", true).
+		From(offset).
+		Size(limit).
+		Do(ctx)
 
 	if err != nil {
-		return err
+		return "", 0, err
 	}
 
 	if result.Hits.TotalHits.Value == 0 {
-		return cerr.NoDoc
+		return "", 0, cerr.NoDoc
 	}
 
-	err = json.JsonHandler.Unmarshal(result.Hits.Hits[0].Source, &buffer)
+	var builder strings.Builder
 
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func FindByKey[T any](
-	client *elastic.Client,
-	index string,
-	offset, limit int,
-	buffer []T, // 제네릭 타입 배열로 받기
-) error {
-	ctx := context.Background()
-
-	// Elasticsearch 검색 요청
-	result, err := client.Search(index).
-		From(offset). // offset(시작 위치)
-		Size(limit).  // limit(가져올 문서의 개수)
-		Do(ctx)       // 실제 실행
-
-	if err != nil {
-		return err
-	}
-
-	// 결과에서 각 히트를 처리하고, buffer에 추가
 	for _, hit := range result.Hits.Hits {
-		var item T
+		var item twitter.SearchResult
 
 		err = json.JsonHandler.Unmarshal(hit.Source, &item)
 
 		if err != nil {
-			return err
+			return "", 0, err
 		}
 
-		buffer = append(buffer, item)
+		builder.WriteString(item.Text)
 	}
 
-	return nil
+	return builder.String(), result.Hits.TotalHits.Value, nil
 }

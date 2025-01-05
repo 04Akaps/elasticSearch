@@ -50,6 +50,10 @@ type Config struct {
 	}
 
 	Twitter map[string]Twitter // key is search keyword
+
+	HuggingAPI struct {
+		Key string
+	}
 }
 
 func NewConfig(path string) Config {

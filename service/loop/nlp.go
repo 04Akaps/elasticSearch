@@ -10,6 +10,7 @@ import (
 	"github.com/04Akaps/elasticSearch.git/types/nlp"
 	"github.com/robfig/cron"
 	"log"
+	"strings"
 	"sync"
 	"time"
 )
@@ -42,6 +43,10 @@ func RunNlpLoop(
 		nlpDataMapper:         make(map[string]nlp.NlpDoc, len(cfg.Twitter)),
 	}
 
+	l.HuggingFaceHttpClient.SetHeader(map[string]string{
+		"Authorization": fmt.Sprintf("Bearer %s", cfg.HuggingAPI.Key),
+	})
+
 	go l.runNlpLoop()
 }
 
@@ -58,14 +63,9 @@ func (n *NlpLoop) runNlpLoop() {
 
 func (n *NlpLoop) tweetsSummary() {
 	/*
-			값을 조회하고 처리할 기준이 필요하다.
-			항상 현재 시점의 값만 처리해야 하는것이 아니라,
-			처리가 안되어있는 시간부터 처리를 해야 할 필요가 있으니.
-
-			1. 마지막으로 들어간 Doc을 가져오고, 들어간 시점 이후의 시간으로 필터를 건다.
-		  	2. 해당 시점 이후의 값을 Redis의 Scan 형태로 가져 온 후에, 데이터를 처리한다.
-				-> 한번에 다 가져오면 부하가 걸린다는 생각이 들어서
-			3. 그 후 업데이트가 다 되면, 그 후에 조회시점을 업데이트 한다.
+		값을 조회하고 처리할 기준이 필요하다.
+		항상 현재 시점의 값만 처리해야 하는것이 아니라,
+		처리가 안되어있는 시간부터 처리를 해야 할 필요가 있다.
 	*/
 
 	var works sync.WaitGroup
@@ -73,7 +73,6 @@ func (n *NlpLoop) tweetsSummary() {
 
 	for key, _ := range n.cfg.Twitter {
 		nlpKey := fmt.Sprintf("%s:%s", key, _nlpSuffix)
-		// 1. 마지막 NLP Doc의 CreatedAt 시간을 가져오자.
 
 		var lastNlpDoc nlp.NlpDoc
 		err := elasticSearch.FindLatestNlpDoc[nlp.NlpDoc](n.ElasticSearch.Client(), nlpKey, lastNlpDoc)
@@ -108,33 +107,32 @@ func (n *NlpLoop) processTweetData(
 	offset := 0
 	limit := 20
 
-	var totalText string
-	// -> 해당 값에 담아서 tweets의 모든 Text 정보를 수집
-	// 이후 Hugging API에 해당 Text를 담아서 원하는 데이터 추출
+	var builder strings.Builder
+	var counts int64
 
 	for {
+
+		texts, count, err := n.ElasticSearch.FindTweetsText(key, offset, limit, startTIme)
+
+		if err != nil {
+			if !errors.Is(err, cerr.NoDoc) {
+				log.Println("Failed to get tweets message", "key", key, "err", err)
+			}
+			break
+		}
+
+		builder.WriteString(texts)
 
 		// 20개씩 순차적으로 가져와서 처리
 		limit += 20
 		offset += 1
-		break
+		counts += count
 	}
 
-}
+	// for 문을 통해서 내가 원하는 범위내에서의 모든 값을 가져왔으니.
+	// AI 적용하여, nlpDataMapper에 값을 저장
 
-//var buffer []twitter.Tweet
-//
-//var res twitter.Tweet
-////
-////index string,
-////	offset, limit int,
-////	buffer []T, // 제네릭 타입 배열로 받기
-//
-//elasticSearch.FindByKey[twitter.Tweet](
-//	n.ElasticSearch.Client(),
-//	)
-//
-//n.ElasticSearch.
-//
-//
-//k := fmt.Sprintf("%s:%s", key, _nlpSuffix)
+	//n.HuggingFaceHttpClient.
+
+	//n.nlpDataMapper[key] = builder.String()
+}

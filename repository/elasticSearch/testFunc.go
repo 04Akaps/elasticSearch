@@ -61,7 +61,7 @@ func (e ElasticSearch) ReadTest(index, key, value string) {
 	result, err := e.client.Search(index).Query(query).Do(ctx)
 
 	if err != nil {
-		log.Println("Failed get data", "cerr", err)
+		log.Println("Failed get data", "err", err)
 		return
 	}
 
