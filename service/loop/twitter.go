@@ -2,7 +2,7 @@ package loop
 
 import (
 	"context"
-	"github.com/04Akaps/elasticSearch.git/common/twitter"
+	"github.com/04Akaps/elasticSearch.git/message/twitter"
 	"log"
 	"time"
 
