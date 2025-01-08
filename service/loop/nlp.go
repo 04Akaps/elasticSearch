@@ -3,16 +3,15 @@ package loop
 import (
 	"errors"
 	"fmt"
-	"github.com/04Akaps/elasticSearch.git/common/http"
 	"github.com/04Akaps/elasticSearch.git/config"
 	"github.com/04Akaps/elasticSearch.git/repository/elasticSearch"
+	"github.com/04Akaps/elasticSearch.git/repository/ollama"
 	"github.com/04Akaps/elasticSearch.git/types/cerr"
 	"github.com/04Akaps/elasticSearch.git/types/nlp"
 	"github.com/robfig/cron"
 	"log"
 	"strings"
 	"sync"
-	"time"
 )
 
 // -> NLP AI를 붙여서 특정 구간에서 현재 Tweets의 내용이 긍정적인지
@@ -23,10 +22,10 @@ const (
 )
 
 type NlpLoop struct {
-	cfg                   config.Config
-	ElasticSearch         elasticSearch.ElasticSearch
-	HuggingFaceHttpClient *http.Client
-	c                     *cron.Cron
+	cfg           config.Config
+	elasticSearch elasticSearch.ElasticSearch
+	ollaMa        ollama.Ollama
+	c             *cron.Cron
 
 	nlpDataMapper map[string]nlp.NlpDoc
 }
@@ -34,18 +33,15 @@ type NlpLoop struct {
 func RunNlpLoop(
 	cfg config.Config,
 	elasticSearch elasticSearch.ElasticSearch,
+	ollaMa ollama.Ollama,
 ) {
 	l := NlpLoop{
-		cfg:                   cfg,
-		ElasticSearch:         elasticSearch,
-		HuggingFaceHttpClient: http.NewClient(10*time.Second, ""),
-		c:                     cron.New(),
-		nlpDataMapper:         make(map[string]nlp.NlpDoc, len(cfg.Twitter)),
+		cfg:           cfg,
+		elasticSearch: elasticSearch,
+		ollaMa:        ollaMa,
+		c:             cron.New(),
+		nlpDataMapper: make(map[string]nlp.NlpDoc, len(cfg.Twitter)),
 	}
-
-	l.HuggingFaceHttpClient.SetHeader(map[string]string{
-		"Authorization": fmt.Sprintf("Bearer %s", cfg.HuggingAPI.Key),
-	})
 
 	go l.runNlpLoop()
 }
@@ -75,7 +71,7 @@ func (n *NlpLoop) tweetsSummary() {
 		nlpKey := fmt.Sprintf("%s:%s", key, _nlpSuffix)
 
 		var lastNlpDoc nlp.NlpDoc
-		err := elasticSearch.FindLatestNlpDoc[nlp.NlpDoc](n.ElasticSearch.Client(), nlpKey, lastNlpDoc)
+		err := elasticSearch.FindLatestNlpDoc[nlp.NlpDoc](n.elasticSearch.Client(), nlpKey, lastNlpDoc)
 
 		if err != nil {
 			if !errors.Is(err, cerr.NoDoc) {
@@ -112,7 +108,7 @@ func (n *NlpLoop) processTweetData(
 
 	for {
 
-		texts, count, err := n.ElasticSearch.FindTweetsText(key, offset, limit, startTIme)
+		texts, count, err := n.elasticSearch.FindTweetsText(key, offset, limit, startTIme)
 
 		if err != nil {
 			if !errors.Is(err, cerr.NoDoc) {

@@ -4,6 +4,7 @@ import (
 	"github.com/04Akaps/elasticSearch.git/cache"
 	"github.com/04Akaps/elasticSearch.git/config"
 	"github.com/04Akaps/elasticSearch.git/repository/elasticSearch"
+	"github.com/04Akaps/elasticSearch.git/repository/ollama"
 	"github.com/04Akaps/elasticSearch.git/service/loop"
 	v1 "github.com/04Akaps/elasticSearch.git/service/v1"
 )
@@ -18,6 +19,7 @@ func NewManager(
 	cfg config.Config,
 	cache *cache.CacheManager,
 	elasticSearch elasticSearch.ElasticSearch,
+	ollaMa ollama.Ollama,
 ) Manager {
 	m := Manager{
 		cfg: cfg,
@@ -26,7 +28,7 @@ func NewManager(
 
 	loop.RunTwitterLoop(cfg, elasticSearch)
 	loop.RunValidatorLoop(cfg, elasticSearch)
-	loop.RunNlpLoop(cfg, elasticSearch)
+	loop.RunNlpLoop(cfg, elasticSearch, ollaMa)
 
 	return m
 }

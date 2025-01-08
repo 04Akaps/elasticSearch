@@ -5,6 +5,7 @@ import (
 	"github.com/04Akaps/elasticSearch.git/cache"
 	"github.com/04Akaps/elasticSearch.git/config"
 	"github.com/04Akaps/elasticSearch.git/repository/elasticSearch"
+	"github.com/04Akaps/elasticSearch.git/repository/ollama"
 	"github.com/04Akaps/elasticSearch.git/service"
 	"go.uber.org/fx"
 )
@@ -36,9 +37,16 @@ var ElasticSearch = fx.Module(
 	}),
 )
 
+var Ollama = fx.Module(
+	"ollama",
+	fx.Provide(func(cfg config.Config) ollama.Ollama {
+		return ollama.NewOllama(cfg.OllaMa.Model, cfg.OllaMa.Url)
+	}),
+)
+
 var Service = fx.Module(
 	"service",
-	fx.Provide(func(cfg config.Config, cacheManager *cache.CacheManager, search elasticSearch.ElasticSearch) service.Manager {
-		return service.NewManager(cfg, cacheManager, search)
+	fx.Provide(func(cfg config.Config, cacheManager *cache.CacheManager, elasticSearch elasticSearch.ElasticSearch, ollaMa ollama.Ollama) service.Manager {
+		return service.NewManager(cfg, cacheManager, elasticSearch, ollaMa)
 	}),
 )

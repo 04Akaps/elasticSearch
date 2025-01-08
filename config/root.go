@@ -51,8 +51,9 @@ type Config struct {
 
 	Twitter map[string]Twitter // key is search keyword
 
-	HuggingAPI struct {
-		Key string
+	OllaMa struct {
+		Model string
+		Url   string
 	}
 }
 

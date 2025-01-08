@@ -12,6 +12,7 @@ func main() {
 		dependency.CacheManager,
 		dependency.ElasticSearch,
 		dependency.Service,
+		dependency.Ollama,
 		fx.Provide(network.NewRouter),
 		fx.Invoke(func(network.Router) {}),
 	).Run()
