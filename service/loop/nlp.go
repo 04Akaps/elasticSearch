@@ -87,7 +87,7 @@ func (n *NlpLoop) tweetsSummary() {
 		}
 
 		// Redis의 Scan 처럼 데이터를 offet, limit을 적용해서 부분적으로 가져온다.
-		go n.processTweetData(nlpKey, lastNlpDoc.CreatedAt, works)
+		go n.processTweetData(nlpKey, lastNlpDoc.CreatedAt, &works)
 
 	}
 
@@ -100,7 +100,7 @@ func (n *NlpLoop) tweetsSummary() {
 func (n *NlpLoop) processTweetData(
 	key string,
 	startTIme int64,
-	works sync.WaitGroup,
+	works *sync.WaitGroup,
 ) {
 	defer works.Done()
 

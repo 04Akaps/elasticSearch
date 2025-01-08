@@ -2,6 +2,7 @@ package http
 
 import (
 	"errors"
+	"fmt"
 	"github.com/bytedance/sonic"
 	"github.com/go-resty/resty/v2"
 	"time"
@@ -38,7 +39,7 @@ func (c *Client) SetAuth(schema string, v string) {
 	c.client.SetAuthToken(v)
 }
 
-func (c *Client) POST(url string, req, resp interface{}) error {
+func (c *Client) POST(url fmt.Stringer, req, resp interface{}) error {
 	body, err := c.client.JSONMarshal(req)
 
 	if err != nil {
@@ -48,7 +49,7 @@ func (c *Client) POST(url string, req, resp interface{}) error {
 	_, err = c.client.R().
 		SetBody(body).
 		SetResult(&resp).
-		Post(url)
+		Post(url.String())
 
 	if err != nil {
 		return err
@@ -57,7 +58,7 @@ func (c *Client) POST(url string, req, resp interface{}) error {
 	return nil
 }
 
-func (c *Client) GET(url string, paramName, req []string, resp interface{}) error {
+func (c *Client) GET(url fmt.Stringer, paramName, req []string, resp interface{}) error {
 	if len(paramName) != len(req) {
 		return errors.New(_paramLength)
 	}
@@ -71,7 +72,7 @@ func (c *Client) GET(url string, paramName, req []string, resp interface{}) erro
 	_, err := c.client.R().
 		SetQueryParams(queryParam).
 		SetResult(&resp).
-		Get(url)
+		Get(url.String())
 
 	if err != nil {
 		return err
