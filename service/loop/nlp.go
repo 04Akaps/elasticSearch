@@ -1,6 +1,7 @@
 package loop
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/04Akaps/elasticSearch.git/config"
@@ -8,10 +9,12 @@ import (
 	"github.com/04Akaps/elasticSearch.git/repository/ollama"
 	"github.com/04Akaps/elasticSearch.git/types/cerr"
 	"github.com/04Akaps/elasticSearch.git/types/nlp"
+	"github.com/olivere/elastic/v7"
 	"github.com/robfig/cron"
 	"log"
 	"strings"
 	"sync"
+	"time"
 )
 
 // -> NLP AI를 붙여서 특정 구간에서 현재 Tweets의 내용이 긍정적인지
@@ -50,6 +53,7 @@ func (n *NlpLoop) runNlpLoop() {
 	n.c.Start()
 
 	// 00, 15, 30, 45분 주기로 실행
+	// -> 15분 간격이기 떄문에 lock은 따로 걸지 않았다.
 	n.c.AddFunc("0 */15 * * * *", func() {
 		n.tweetsSummary()
 	})
@@ -84,10 +88,11 @@ func (n *NlpLoop) tweetsSummary() {
 
 		// Redis의 Scan 처럼 데이터를 offet, limit을 적용해서 부분적으로 가져온다.
 		go n.processTweetData(nlpKey, lastNlpDoc.CreatedAt, &works)
-
 	}
 
 	works.Wait()
+
+	n.ProcessSummarized()
 
 	// 데이터 모두 업데이트 이후에 초기화
 	n.nlpDataMapper = make(map[string]nlp.NlpDoc, len(n.cfg.Twitter))
@@ -125,10 +130,35 @@ func (n *NlpLoop) processTweetData(
 		counts += count
 	}
 
-	// for 문을 통해서 내가 원하는 범위내에서의 모든 값을 가져왔으니.
-	// AI 적용하여, nlpDataMapper에 값을 저장
+	builder.WriteString("This is tweets some posts summary this text")
 
-	//n.HuggingFaceHttpClient.
+	summarized, err := n.ollaMa.Call(builder.String())
 
-	//n.nlpDataMapper[key] = builder.String()
+	if err != nil {
+		log.Println("Failed to call ollaMa", "key", key, "err", err)
+		return
+	}
+
+	n.nlpDataMapper[key] = nlp.NlpDoc{
+		Summary:                  summarized,
+		TotalAggregatedDocuments: counts,
+		CreatedAt:                time.Now().Unix(),
+	}
+}
+
+func (n *NlpLoop) ProcessSummarized() {
+	bulkClient := n.elasticSearch.Bulk()
+
+	index := 0
+
+	for k, doc := range n.nlpDataMapper {
+		req := elastic.NewBulkIndexRequest().
+			Index(k).
+			Id(string(rune(index + 1))).
+			Doc(doc)
+
+		bulkClient = bulkClient.Add(req)
+	}
+
+	n.elasticSearch.BulkDo(context.Background(), bulkClient)
 }

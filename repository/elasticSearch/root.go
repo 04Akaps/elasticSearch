@@ -74,6 +74,18 @@ func (e ElasticSearch) Bulk() *elastic.BulkService {
 	return e.client.Bulk()
 }
 
+func (e ElasticSearch) BulkDo(ctx context.Context, bulkClient *elastic.BulkService) {
+	response, err := bulkClient.Do(ctx)
+
+	if err != nil {
+		log.Println("Failed to send bulk write to elasticSearch", "err", err)
+	} else if response.Errors {
+		log.Println("Bulk request completed with errors")
+	} else {
+		log.Println("Bulk request succeeded")
+	}
+}
+
 func (e ElasticSearch) Client() *elastic.Client {
 	return e.client
 }
@@ -133,6 +145,8 @@ func (e ElasticSearch) FindTweetsText(
 
 		builder.WriteString(item.Text)
 	}
+
+	builder.WriteString("\n")
 
 	return builder.String(), result.Hits.TotalHits.Value, nil
 }
